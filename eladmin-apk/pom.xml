@@ -8,7 +8,6 @@
     </parent>
 
     <artifactId>eladmin-apk</artifactId>
-    <packaging>jar</packaging>
 
     <name>eladmin-apk</name>
     <url>http://maven.apache.org</url>
