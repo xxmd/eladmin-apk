@@ -102,6 +102,11 @@ public class LocalStorageServiceImpl implements LocalStorageService {
     }
 
     @Override
+    public LocalStorage copy(LocalStorage src) throws IOException {
+        return create(new File(src.getPath()));
+    }
+
+    @Override
     @Transactional(rollbackFor = Exception.class)
     public LocalStorage create(MultipartFile multipartFile) {
         return create(multipartFile.getOriginalFilename(), multipartFile);
@@ -147,8 +152,7 @@ public class LocalStorageServiceImpl implements LocalStorageService {
     public void deleteAll(Long[] ids) {
         for (Long id : ids) {
             LocalStorage storage = localStorageRepository.findById(id).orElseGet(LocalStorage::new);
-            FileUtil.del(storage.getPath());
-            localStorageRepository.delete(storage);
+            delete(storage);
         }
     }
 
@@ -158,9 +162,8 @@ public class LocalStorageServiceImpl implements LocalStorageService {
         if (localStorage == null) {
             return;
         }
-        if (localStorage.getId() != null) {
-            deleteAll(new Long[]{localStorage.getId()});
-        }
+        localStorageRepository.delete(localStorage);
+        FileUtil.del(localStorage.getPath());
     }
 
     @Override

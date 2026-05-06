@@ -47,29 +47,28 @@ public class AppIconService {
     private LocalStorageService localStorageService;
 
     @Transactional(rollbackFor = Exception.class)
-    public AppIcon create(AppIcon item) throws IOException {
-        MultipartFile multipartFile = item.getZipResFile().getRaw();
-        if (multipartFile == null && item.getId() != null && item.getZipResFile().getId() != null && item.getMainIconFile().getId() != null) {
-            return item;
-        } else {
-            IconZipReader iconZipReader = new IconZipReader(multipartFile);
-            LocalStorage iconFile = localStorageService.create(iconZipReader.getPlayStorePng());
-            item.setMainIconFile(iconFile);
-            File androidZipDir = iconZipReader.getAndroidZipDir();
-            LocalStorage iconZipFile = localStorageService.create(androidZipDir);
-            item.setZipResFile(iconZipFile);
-            iconZipReader.release();
-            return repository.save(item);
-        }
+    public AppIcon create(MultipartFile multipartFile) throws IOException {
+        AppIcon appIcon = new AppIcon();
+        IconZipReader iconZipReader = new IconZipReader(multipartFile);
+        LocalStorage iconFile = localStorageService.create(iconZipReader.getPlayStorePng());
+        appIcon.setMainIconFile(iconFile);
+        File androidZipDir = iconZipReader.getAndroidZipDir();
+        LocalStorage iconZipFile = localStorageService.create(androidZipDir);
+        appIcon.setZipResFile(iconZipFile);
+        iconZipReader.release();
+        return repository.save(appIcon);
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    public AppIcon copy(AppIcon src) throws IOException {
+        AppIcon item = new AppIcon();
+        item.setMainIconFile(localStorageService.copy(src.getMainIconFile()));
+        item.setZipResFile(localStorageService.copy(src.getZipResFile()));
+        return repository.save(item);
     }
 
     @Transactional
     public void delete(@NotNull AppIcon item) {
-        List<H5AppInfo> list = appInfoRepository.findByIcon(item);
-        if (list.size() > 1) {
-            log.info("id为 {} 的图标绑定应用数量为 {}, 不执行删除操作", item.getId(), list.size());
-            return;
-        }
         repository.delete(item);
         localStorageService.delete(item.getMainIconFile());
         localStorageService.delete(item.getZipResFile());

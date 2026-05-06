@@ -63,6 +63,12 @@ public interface LocalStorageService {
     LocalStorage create(String name, MultipartFile file);
 
     /**
+     * 复制
+     * @return /
+     */
+    LocalStorage copy(LocalStorage src) throws IOException;
+
+    /**
      * 上传
      * @param file 文件
      * @return /

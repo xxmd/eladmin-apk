@@ -29,7 +29,9 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
 import java.util.*;
 
 @Slf4j
@@ -62,9 +64,11 @@ public class H5AppInfoService {
 
     @Transactional(rollbackFor = Exception.class)
     public void create(H5AppInfo item) throws Exception {
-        item.getIcon().setId(null);
-        AppIcon savedAppIcon = appIconService.create(item.getIcon());
-        item.setIcon(savedAppIcon);
+        if (item.getIcon().getZipResFile().getRaw() == null) {
+            item.setIcon(appIconService.copy(item.getIcon()));
+        } else {
+            item.setIcon(appIconService.create(item.getIcon().getZipResFile().getRaw()));
+        }
         if (item.getSignature() == null) {
             item.setSignature(createAppSign(item));
         }
@@ -86,9 +90,11 @@ public class H5AppInfoService {
 
     @Transactional(rollbackFor = Exception.class)
     public void update(H5AppInfo item) throws Exception {
-        if (item.getIcon().getZipResFile().getId() == null) {
-            AppIcon savedAppIcon = appIconService.create(item.getIcon());
-            item.setIcon(savedAppIcon);
+        MultipartFile multipartFile = item.getIcon().getZipResFile().getRaw();
+        if (multipartFile != null) {
+            Optional<H5AppInfo> optional = repository.findById(item.getId());
+            optional.ifPresent(h5AppInfo -> appIconService.delete(h5AppInfo.getIcon()));
+            item.setIcon(appIconService.create(multipartFile));
         }
         if (item.getSignature() == null) {
             item.setSignature(createAppSign(item));
