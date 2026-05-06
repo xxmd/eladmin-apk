@@ -27,6 +27,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * 创建自定义的线程池
+ *
  * @author Zheng Jie
  * @description
  * @date 2023-06-08
@@ -70,6 +71,7 @@ public class AsyncExecutor implements AsyncConfigurer {
 
     /**
      * 自定义线程池，用法 @Async
+     *
      * @return Executor
      */
     @Override
@@ -85,6 +87,7 @@ public class AsyncExecutor implements AsyncConfigurer {
     /**
      * 自定义线程池，用法，注入到类中使用
      * private ThreadPoolTaskExecutor taskExecutor;
+     *
      * @return ThreadPoolTaskExecutor
      */
     @Bean("taskAsync")
@@ -96,6 +99,17 @@ public class AsyncExecutor implements AsyncConfigurer {
         executor.setKeepAliveSeconds(60);
         executor.setThreadNamePrefix("el-task-");
         executor.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());
+        return executor;
+    }
+
+    @Bean("packTaskExecutor")
+    public Executor packTaskExecutor() {
+        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+        executor.setCorePoolSize(1);     // 👈 并发数
+        executor.setMaxPoolSize(1);
+        executor.setQueueCapacity(100);   // 👈 排队数量
+        executor.setThreadNamePrefix("pack-task-");
+        executor.initialize();
         return executor;
     }
 }

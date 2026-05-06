@@ -16,6 +16,7 @@
 package me.zhengjie.service;
 
 import cn.hutool.core.util.ZipUtil;
+import com.alibaba.fastjson.JSON;
 import com.android.apksig.apk.ApkFormatException;
 import lombok.extern.slf4j.Slf4j;
 import me.zhengjie.entity.LocalStorage;
@@ -136,6 +137,7 @@ public class H5PackTaskService {
     }
 
     public void run(Long id) {
+        // TODO 并发运行数量限制
         Optional<H5PackTask> optional = repository.findById(id);
         if (optional.isPresent()) {
             H5PackTask item = optional.get();
@@ -164,8 +166,11 @@ public class H5PackTaskService {
         }
     }
 
-    @Async
+    @Async("packTaskExecutor")
     public void run(H5PackTask item) {
+        log.info("开始执行任务 id: {}, thread: {}",
+                item.getId(),
+                Thread.currentThread().getName());
         File tempDir = null;
         try {
             // 1. 复制模板工程
