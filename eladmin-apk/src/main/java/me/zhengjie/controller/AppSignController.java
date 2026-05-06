@@ -54,7 +54,7 @@ public class AppSignController {
 
     @GetMapping("/getAll")
     @ApiOperation("获取所有应用签名")
-    @PreAuthorize("@el.check('app:sign:list')")
+//    @PreAuthorize("@el.check('app:sign:list')")
     public ResponseEntity<List<AppSign>> getAll() {
         return new ResponseEntity<>(service.getAll(), HttpStatus.OK);
     }
@@ -78,7 +78,7 @@ public class AppSignController {
     @PostMapping("/upload")
     @Log("上传应用签名")
     @ApiOperation("上传应用签名")
-    @PreAuthorize("@el.check('app:sign:add')")
+    @PreAuthorize("@el.check('app:sign:upload')")
     public ResponseEntity<Object> upload(@Validated @ModelAttribute AppSign item) throws InvalidNameException, IOException {
         service.upload(item);
         return new ResponseEntity<>(HttpStatus.CREATED);
