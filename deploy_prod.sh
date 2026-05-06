@@ -56,7 +56,7 @@ echo "=============================="
 docker run -d \
   --name $APP_NAME \
   -p $PORT:8000 \
-  -v $(pwd)/file:/home/eladmin/file \
+  -v /home/eladmin/:/home/eladmin/ \
   $APP_NAME
 
 echo "=============================="
