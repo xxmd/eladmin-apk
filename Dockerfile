@@ -37,4 +37,7 @@ RUN yes | bash $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager \
 COPY eladmin-system/target/eladmin-system-2.7.jar /app/eladmin-system-2.7.jar
 WORKDIR /app
 
+ENV DB_HOST=apk8848.qzz.io
+ENV REDIS_HOST=apk8848.qzz.io
+
 CMD ["java", "-jar", "/app/eladmin-system-2.7.jar", "--spring.profiles.active=prod"]
