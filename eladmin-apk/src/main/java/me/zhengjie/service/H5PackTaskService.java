@@ -16,7 +16,6 @@
 package me.zhengjie.service;
 
 import cn.hutool.core.util.ZipUtil;
-import com.alibaba.fastjson.JSON;
 import com.android.apksig.apk.ApkFormatException;
 import lombok.extern.slf4j.Slf4j;
 import me.zhengjie.entity.LocalStorage;
@@ -39,11 +38,8 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.security.*;
 import java.security.cert.CertificateException;
@@ -69,16 +65,10 @@ public class H5PackTaskService {
     }
 
     @Transactional(rollbackFor = Exception.class)
-    public void createByAppInfoId(Long appInfoId) {
-        Optional<H5AppInfo> optionalH5AppInfo = appInfoRepository.findById(appInfoId);
-        if (optionalH5AppInfo.isPresent()) {
-            H5AppInfo h5AppInfo = optionalH5AppInfo.get();
-            H5PackTask h5PackTask = new H5PackTask();
-            h5PackTask.setH5AppInfo(h5AppInfo);
-            repository.save(h5PackTask);
-        } else {
-            throw new IllegalArgumentException(String.format("id为%d的应用信息不存在", appInfoId));
-        }
+    public void createByH5AppInfo(H5AppInfo h5AppInfo) {
+        H5PackTask h5PackTask = new H5PackTask();
+        h5PackTask.setH5AppInfo(h5AppInfo);
+        repository.save(h5PackTask);
     }
 
     @Transactional(rollbackFor = Exception.class)
@@ -168,7 +158,7 @@ public class H5PackTaskService {
 
     @Async("packTaskExecutor")
     public void run(H5PackTask item) {
-        log.info("开始执行任务 id: {}, thread: {}",
+        log.info("开始执行H5小游戏打包任务 id: {}, thread: {}",
                 item.getId(),
                 Thread.currentThread().getName());
         File tempDir = null;

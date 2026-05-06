@@ -48,15 +48,6 @@ public class H5PackTaskController {
         return new ResponseEntity<>(list, HttpStatus.OK);
     }
 
-    @GetMapping("/{appInfoId}")
-    @Log("新增H5打包任务")
-    @ApiOperation("新增H5打包任务")
-    @PreAuthorize("@el.check('h5:pack:task:add')")
-    public ResponseEntity<Object> add(@PathVariable("appInfoId") Long appInfoId) throws IOException {
-        service.createByAppInfoId(appInfoId);
-        return new ResponseEntity<>(HttpStatus.OK);
-    }
-
     @GetMapping("/run/{id}")
     @Log("运行H5打包任务")
     @ApiOperation("运行H5打包任务")

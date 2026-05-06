@@ -16,7 +16,6 @@
 package me.zhengjie.service;
 
 import lombok.extern.slf4j.Slf4j;
-import me.zhengjie.entity.app.AppIcon;
 import me.zhengjie.entity.app.AppSign;
 import me.zhengjie.entity.h5.*;
 import me.zhengjie.repository.H5AppInfoRepository;
@@ -31,7 +30,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.File;
 import java.util.*;
 
 @Slf4j
@@ -73,7 +71,7 @@ public class H5AppInfoService {
             item.setSignature(createAppSign(item));
         }
         H5AppInfo savedItem = repository.save(item);
-        h5PackTaskService.createByAppInfoId(savedItem.getId());
+        h5PackTaskService.createByH5AppInfo(savedItem);
     }
 
     private AppSign createAppSign(H5AppInfo h5AppInfo) throws Exception {
