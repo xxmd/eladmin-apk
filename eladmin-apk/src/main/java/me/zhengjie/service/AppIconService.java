@@ -23,6 +23,8 @@ import me.zhengjie.entity.h5.IconZipReader;
 import me.zhengjie.entity.app.AppIcon;
 import me.zhengjie.repository.AppIconRepository;
 import me.zhengjie.repository.H5AppInfoRepository;
+import me.zhengjie.utils.FileUtil;
+import org.apache.commons.io.FileUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -53,6 +55,7 @@ public class AppIconService {
         LocalStorage iconZipFile = localStorageService.create(zipDir);
         item.setZipResFile(iconZipFile);
         iconZipReader.release();
+        FileUtils.deleteDirectory(zipDir);
         return repository.save(item);
     }
 

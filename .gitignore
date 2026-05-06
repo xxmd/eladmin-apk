@@ -5,3 +5,5 @@
 */*.iml
 /.gradle/
 eladmin-apk/src/main/resources/templates/h5-mini-game
+/application.pid
+icon_unzip.zip

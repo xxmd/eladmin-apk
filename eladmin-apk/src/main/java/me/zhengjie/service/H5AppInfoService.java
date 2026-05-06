@@ -88,8 +88,9 @@ public class H5AppInfoService {
     @Transactional(rollbackFor = Exception.class)
     public void update(H5AppInfo item) throws Exception {
         if (item.getIcon().getZipResFile().getId() == null) {
+            item.getIcon().setId(null);
             AppIcon savedAppIcon = appIconService.create(item.getIcon());
-            item.getIcon().setId(savedAppIcon.getId());
+            item.setIcon(savedAppIcon);
         }
         if (item.getSignature() == null) {
             item.setSignature(createAppSign(item));
