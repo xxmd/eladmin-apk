@@ -8,6 +8,8 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 @Slf4j
@@ -17,23 +19,31 @@ public class GradleUtil {
         grantGradlew(projectDir, isWindows);
         ProcessBuilder processBuilder = getProcessBuilder(projectDir, isWindows);
         Process process = processBuilder.start();
-        printGradleOut(process);
+        List<String> gradleOut = collectGradleOut(process);
         int exitCode = process.waitFor();
         if (exitCode == 0) {
             log.info("apk打包成功");
         } else {
-            throw new RuntimeException(String.format("gradlew异常结束, exitCode: %d", exitCode));
+            String logText = String.join("\n", gradleOut);
+            throw new RuntimeException(
+                    String.format("gradlew异常结束, exitCode: %d\n===== Gradle Log Start =====\n%s\n===== Gradle Log End =====",
+                            exitCode,
+                            logText
+                    )
+            );
         }
     }
 
-    private static void printGradleOut(Process process) throws IOException {
+    private static List<String> collectGradleOut(Process process) throws IOException {
         BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8));
         String line;
+        List<String> gradlewOut = new ArrayList<>();
         while ((line = reader.readLine()) != null) {
             if (StringUtils.isNotBlank(line)) {
-                log.info("[Gradle] {}", line);
+                gradlewOut.add(line);
             }
         }
+        return gradlewOut;
     }
 
     private static void grantGradlew(File projectDir, boolean isWindows) throws IOException, InterruptedException {

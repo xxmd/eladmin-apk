@@ -43,10 +43,6 @@ public class H5AppInfoService {
     private AppSignService appSignService;
     @Autowired
     private H5PackTaskService h5PackTaskService;
-    @Autowired
-    private RedisUtils redisUtils;
-    @Autowired
-    private LocalStorageService localStorageService;
 
     public PageResult<H5AppInfo> queryAll(H5AppInfoQueryCriteria criteria, Pageable pageable) {
         Page<H5AppInfo> page = repository.findAll((root, criteriaQuery, criteriaBuilder) -> QueryHelp.getPredicate(root, criteria, criteriaBuilder), pageable);
@@ -101,13 +97,20 @@ public class H5AppInfoService {
         repository.save(item);
     }
 
+    @Transactional
     public void deleteAll(Long[] ids) {
         for (Long id : ids) {
             Optional<H5AppInfo> optional = repository.findById(id);
             if (optional.isPresent()) {
                 H5AppInfo item = optional.get();
-                repository.deleteById(item.getId());
-                h5PackTaskService.deleteByAppInfoId(item.getId());
+                // 删除图标
+                appIconService.delete(item.getIcon());
+                // 删除签名
+                appSignService.delete(item.getSignature());
+                // 删除打包任务
+                h5PackTaskService.deleteByAppInfo(item);
+                // 删除自己
+                repository.delete(item);
             }
         }
     }

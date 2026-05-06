@@ -73,10 +73,10 @@ public class LocalStorageController {
     @PostMapping("/pictures")
     public ResponseEntity<LocalStorage> uploadPicture(@RequestParam MultipartFile file){
         // 判断文件是否为图片
-        String suffix = FileUtil.getExtensionName(file.getOriginalFilename());
-        if(!FileUtil.IMAGE.equals(FileUtil.getFileType(suffix))){
-            throw new BadRequestException("只能上传图片");
-        }
+//        String suffix = FileUtil.getExtensionName(file.getOriginalFilename());
+//        if(!FileUtil.IMAGE.equals(FileUtil.getFileType(suffix))){
+//            throw new BadRequestException("只能上传图片");
+//        }
         LocalStorage localStorage = localStorageService.create(null, file);
         return new ResponseEntity<>(localStorage, HttpStatus.OK);
     }

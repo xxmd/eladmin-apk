@@ -15,6 +15,7 @@
  */
 package me.zhengjie.repository;
 
+import me.zhengjie.entity.h5.H5AppInfo;
 import me.zhengjie.entity.h5.H5PackTask;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
@@ -23,5 +24,5 @@ import java.util.List;
 
 
 public interface H5PackTaskRepository extends JpaRepository<H5PackTask, Long>, JpaSpecificationExecutor<H5PackTask> {
-    List<H5PackTask> findByH5AppInfoId(Long appInfoId);
+    List<H5PackTask> findByH5AppInfo(H5AppInfo h5AppInfo);
 }

@@ -15,10 +15,16 @@
  */
 package me.zhengjie.repository;
 
+import me.zhengjie.entity.app.AppIcon;
+import me.zhengjie.entity.app.AppSign;
 import me.zhengjie.entity.h5.H5AppInfo;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
+import java.util.List;
+
 
 public interface H5AppInfoRepository extends JpaRepository<H5AppInfo, Long>, JpaSpecificationExecutor<H5AppInfo> {
+    List<H5AppInfo> findBySignature(AppSign appSign);
+    List<H5AppInfo> findByIcon(AppIcon appIcon);
 }

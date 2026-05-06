@@ -15,11 +15,14 @@
  */
 package me.zhengjie.service;
 
+import lombok.extern.slf4j.Slf4j;
 import me.zhengjie.entity.LocalStorage;
 import me.zhengjie.entity.app.AppSign;
 import me.zhengjie.entity.app.KeyStoreReader;
 import me.zhengjie.entity.app.query.AppSignQueryCriteria;
+import me.zhengjie.entity.h5.H5AppInfo;
 import me.zhengjie.repository.AppSignRepository;
+import me.zhengjie.repository.H5AppInfoRepository;
 import me.zhengjie.util.BcKeystoreUtil;
 import me.zhengjie.utils.PageResult;
 import me.zhengjie.utils.PageUtil;
@@ -39,25 +42,23 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 
+@Slf4j
 @Service
 public class AppSignService {
     @Autowired
     private AppSignRepository repository;
     @Autowired
+    private H5AppInfoRepository appInfoRepository;
+    @Autowired
     private LocalStorageService localStorageService;
 
     public List<AppSign> getAll() {
-        List<AppSign> all = repository.findAll();
-        return all;
+        return repository.findAll();
     }
 
     public PageResult<AppSign> queryAll(AppSignQueryCriteria criteria, Pageable pageable) {
         Page<AppSign> page = repository.findAll((root, criteriaQuery, criteriaBuilder) -> QueryHelp.getPredicate(root, criteria, criteriaBuilder), pageable);
         return PageUtil.toPage(page);
-    }
-
-    public List<AppSign> queryAll(AppSignQueryCriteria criteria) {
-        return repository.findAll((root, criteriaQuery, criteriaBuilder) -> QueryHelp.getPredicate(root, criteria, criteriaBuilder));
     }
 
     @Transactional
@@ -94,30 +95,23 @@ public class AppSignService {
 
     public void deleteAll(Long[] ids) {
         for (Long id : ids) {
-            Optional<AppSign> apkSignOptional = repository.findById(id);
-            if (apkSignOptional.isPresent()) {
-                LocalStorage localStorage = apkSignOptional.get().getFileInfo();
-                localStorageService.delete(localStorage);
-            }
-            repository.deleteById(id);
+            Optional<AppSign> optional = repository.findById(id);
+            optional.ifPresent(this::delete);
         }
     }
 
-//    public void download(List<ApkSignDto> all, HttpServletResponse response) throws IOException {
-//        List<Map<String, Object>> list = new ArrayList<>();
-//        for (ApkSignDto apkSign : all) {
-//            Map<String, Object> map = new LinkedHashMap<>();
-//            map.put("密钥库密码", apkSign.getStorePass());
-//            map.put("密钥别名", apkSign.getAlias());
-//            map.put("密钥密码", apkSign.getKeyPass());
-//            map.put("文件id", apkSign.getFileId());
-//            map.put("备注", apkSign.getRemark());
-//            map.put("创建者", apkSign.getCreateBy());
-//            map.put("创建日期", apkSign.getCreateTime());
-//            map.put("更新者", apkSign.getUpdateBy());
-//            map.put("更新时间", apkSign.getUpdateTime());
-//            list.add(map);
-//        }
-//        FileUtil.downloadExcel(list, response);
-//    }
+    @Transactional
+    public void delete(AppSign signature) {
+        if (signature == null || signature.getId() == null) {
+            return;
+        }
+        List<H5AppInfo> list = appInfoRepository.findBySignature(signature);
+        if (list.size() > 1) {
+            log.info("id为 {} 的签名绑定应用数量为 {}, 不执行删除操作", signature.getId(), list.size());
+            return;
+        }
+        LocalStorage localStorage = signature.getFileInfo();
+        localStorageService.delete(localStorage);
+        repository.delete(signature);
+    }
 }

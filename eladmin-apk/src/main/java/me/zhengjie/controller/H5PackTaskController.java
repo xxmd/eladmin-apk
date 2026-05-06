@@ -65,4 +65,13 @@ public class H5PackTaskController {
         service.run(id);
         return new ResponseEntity<>(HttpStatus.OK);
     }
+
+    @GetMapping("/reset/{id}")
+    @Log("重置H5打包任务")
+    @ApiOperation("重置H5打包任务")
+    @PreAuthorize("@el.check('h5:pack:task:reset')")
+    public ResponseEntity<Object> reset(@PathVariable("id") Long id) {
+        service.resetById(id);
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
 }

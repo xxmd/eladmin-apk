@@ -16,6 +16,7 @@
 package me.zhengjie.service;
 
 import cn.hutool.core.util.ZipUtil;
+import com.android.apksig.apk.ApkFormatException;
 import lombok.extern.slf4j.Slf4j;
 import me.zhengjie.entity.LocalStorage;
 import me.zhengjie.entity.app.AppSign;
@@ -37,9 +38,14 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.security.*;
+import java.security.cert.CertificateException;
 import java.sql.Timestamp;
 import java.util.*;
 import java.util.zip.ZipInputStream;
@@ -79,30 +85,54 @@ public class H5PackTaskService {
         repository.save(item);
     }
 
-    public void deleteByAppInfoId(Long appInfoId) {
-        List<H5PackTask> itemList = repository.findByH5AppInfoId(appInfoId);
+    @Transactional
+    public void deleteByAppInfo(H5AppInfo h5AppInfo) {
+        List<H5PackTask> itemList = repository.findByH5AppInfo(h5AppInfo);
         if (itemList != null && !itemList.isEmpty()) {
             for (H5PackTask h5PackTask : itemList) {
-                repository.delete(h5PackTask);
+                delete(h5PackTask);
             }
         }
+    }
+
+    @Transactional
+    private void delete(H5PackTask item) {
+        deleteRelatedFiles(item);
+        repository.delete(item);
     }
 
     private Timestamp getNow() {
         return new Timestamp(System.currentTimeMillis());
     }
 
+    public void resetById(Long id) {
+        Optional<H5PackTask> optional = repository.findById(id);
+        if (optional.isPresent()) {
+            reset(optional.get());
+        } else {
+            throw new IllegalArgumentException(String.format("id为%d的打包任务不存在", id));
+        }
+    }
+
+    private void deleteRelatedFiles(H5PackTask item) {
+        LocalStorage srcApkFile = item.getApkFile();
+        LocalStorage srcXMApkFile = item.getXmApkFile();
+        if (srcApkFile != null) {
+            localStorageService.delete(srcApkFile);
+        }
+        if (srcXMApkFile != null) {
+            localStorageService.delete(srcXMApkFile);
+        }
+    }
+
     private void reset(H5PackTask item) {
-        H5PackTask h5PackTask = new H5PackTask();
-        h5PackTask.setId(item.getId());
-        h5PackTask.setH5AppInfo(item.getH5AppInfo());
-        h5PackTask.setRemark(item.getRemark());
-        h5PackTask.setCreateBy(item.getCreateBy());
-        h5PackTask.setCreateTime(item.getCreateTime());
-        h5PackTask.setUpdateBy(item.getUpdateBy());
-        h5PackTask.setUpdateTime(item.getUpdateTime());
-        h5PackTask.setTaskStartTime(getNow());
-        repository.save(h5PackTask);
+        deleteRelatedFiles(item);
+        item.setTaskStartTime(null);
+        item.setTaskEndTime(null);
+        item.setException(null);
+        item.setApkFile(null);
+        item.setXmApkFile(null);
+        repository.save(item);
     }
 
     public void run(Long id) {
@@ -110,10 +140,27 @@ public class H5PackTaskService {
         if (optional.isPresent()) {
             H5PackTask item = optional.get();
             reset(item);
+            item.setTaskStartTime(getNow());
+            repository.save(item);
             H5PackTaskService proxy = SpringBeanHolder.getBean(H5PackTaskService.class);
             proxy.run(item);
         } else {
             throw new IllegalArgumentException(String.format("id为%d的打包任务不存在", id));
+        }
+    }
+
+    private void updateApks(H5MiniGameProject h5MiniGameProject, H5PackTask item) throws IOException, UnrecoverableKeyException, ApkFormatException, CertificateException, NoSuchAlgorithmException, SignatureException, KeyStoreException, InvalidKeyException {
+        Optional<File> apkFileOptional = h5MiniGameProject.getReleaseApkFile();
+        if (apkFileOptional.isPresent()) {
+            LocalStorage apkFile = localStorageService.create(apkFileOptional.get());
+            item.setApkFile(apkFile);
+            if ("XIAOMI".equals(item.getH5AppInfo().getPubPlatType())) {
+                File xiaoMiVerifyApk = h5MiniGameProject.getXiaoMiVerifyApk();
+                AppSign signature = item.getH5AppInfo().getSignature();
+                File signedXMApk = SignatureUtil.signApk(signature, xiaoMiVerifyApk);
+                LocalStorage xmApkFile = localStorageService.create(signedXMApk);
+                item.setXmApkFile(xmApkFile);
+            }
         }
     }
 
@@ -140,23 +187,8 @@ public class H5PackTaskService {
             GradleUtil.assembleRelease(projectDir);
             item.setGradleEndTime(getNow());
 
-            // 4. release.apk上传和小米验证文件上传
-            Optional<File> apkFileOptional = h5MiniGameProject.getReleaseApkFile();
-            if (apkFileOptional.isPresent()) {
-                LocalStorage srcApkFile = item.getApkFile();
-                LocalStorage apkFile = localStorageService.create(apkFileOptional.get());
-                item.setApkFile(apkFile);
-                localStorageService.delete(srcApkFile);
-                LocalStorage srcXMApkFile = item.getXmApkFile();
-                if ("XIAOMI".equals(item.getH5AppInfo().getPubPlatType())) {
-                    File xiaoMiVerifyApk = h5MiniGameProject.getXiaoMiVerifyApk();
-                    AppSign signature = item.getH5AppInfo().getSignature();
-                    File signedXMApk = SignatureUtil.signApk(signature, xiaoMiVerifyApk);
-                    LocalStorage xmApkFile = localStorageService.create(signedXMApk);
-                    item.setXmApkFile(xmApkFile);
-                }
-                localStorageService.delete(srcXMApkFile);
-            }
+            // 4. 更新release安装包和小米签名校验包
+            updateApks(h5MiniGameProject, item);
         } catch (Exception e) {
             log.error("H5小游戏打包异常", e);
             item.setException(ExceptionUtils.getStackTrace(e));

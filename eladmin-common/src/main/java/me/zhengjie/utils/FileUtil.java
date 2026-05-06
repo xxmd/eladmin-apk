@@ -22,6 +22,7 @@ import cn.hutool.poi.excel.ExcelUtil;
 import lombok.extern.slf4j.Slf4j;
 import me.zhengjie.exception.BadRequestException;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.poi.util.IOUtils;
 import org.apache.poi.xssf.streaming.SXSSFSheet;
 import org.springframework.web.multipart.MultipartFile;
@@ -106,15 +107,6 @@ public class FileUtil extends cn.hutool.core.io.FileUtil {
      * 格式化小数
      */
     private static final DecimalFormat DF = new DecimalFormat("0.00");
-
-    public static final String IMAGE = "images";
-    public static final String TXT = "documents";
-    public static final String MUSIC = "musics";
-    public static final String VIDEO = "videos";
-    public static final String ZIP = "zips";
-    public static final String SIGNATURE = "signatures";
-    public static final String APK = "apks";
-    public static final String OTHER = "others";
 
 
     /**
@@ -332,19 +324,7 @@ public class FileUtil extends cn.hutool.core.io.FileUtil {
     }
 
     public static String getFileType(String type) {
-        if (type == null || type.trim().isEmpty()) return OTHER;
-
-        type = type.toLowerCase();
-
-        if (IMAGE_SET.contains(type)) return IMAGE;
-        if (DOC_SET.contains(type)) return TXT;
-        if (MUSIC_SET.contains(type)) return MUSIC;
-        if (VIDEO_SET.contains(type)) return VIDEO;
-        if (ARCHIVE_SET.contains(type)) return ZIP;
-        if (KEYSTORE_SET.contains(type)) return SIGNATURE;
-        if (APK_SET.contains(type)) return APK;
-
-        return OTHER;
+        return StringUtils.isBlank(type) ? "others" : type.trim().toLowerCase() + "s";
     }
 
     public static void checkSize(long maxSize, long size) {

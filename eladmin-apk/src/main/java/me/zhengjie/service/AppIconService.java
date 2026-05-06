@@ -16,22 +16,30 @@
 package me.zhengjie.service;
 
 import cn.hutool.core.util.ZipUtil;
+import lombok.extern.slf4j.Slf4j;
 import me.zhengjie.entity.LocalStorage;
+import me.zhengjie.entity.h5.H5AppInfo;
 import me.zhengjie.entity.h5.IconZipReader;
 import me.zhengjie.entity.app.AppIcon;
 import me.zhengjie.repository.AppIconRepository;
+import me.zhengjie.repository.H5AppInfoRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.validation.constraints.NotNull;
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
 import java.util.Optional;
 
+@Slf4j
 @Service
 public class AppIconService {
     @Autowired
     private AppIconRepository repository;
+    @Autowired
+    private H5AppInfoRepository appInfoRepository;
     @Autowired
     private LocalStorageService localStorageService;
 
@@ -48,12 +56,15 @@ public class AppIconService {
         return repository.save(item);
     }
 
-    public void delete(Long id) {
-        Optional<AppIcon> optional = repository.findById(id);
-        if (optional.isPresent()) {
-            AppIcon item = optional.get();
-            localStorageService.delete(item.getMainIconFile());
-            localStorageService.delete(item.getZipResFile());
+    @Transactional
+    public void delete(@NotNull AppIcon item) {
+        List<H5AppInfo> list = appInfoRepository.findByIcon(item);
+        if (list.size() > 1) {
+            log.info("id为 {} 的图标绑定应用数量为 {}, 不执行删除操作", item.getId(), list.size());
+            return;
         }
+        repository.delete(item);
+        localStorageService.delete(item.getMainIconFile());
+        localStorageService.delete(item.getZipResFile());
     }
 }

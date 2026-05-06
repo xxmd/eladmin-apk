@@ -17,6 +17,7 @@ package me.zhengjie.service.impl;
 
 import cn.hutool.core.util.ObjectUtil;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import me.zhengjie.config.properties.FileProperties;
 import me.zhengjie.entity.LocalStorage;
 import me.zhengjie.service.dto.LocalStorageDto;
@@ -46,6 +47,7 @@ import javax.servlet.http.HttpServletResponse;
  * @author Zheng Jie
  * @date 2019-09-05
  */
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class LocalStorageServiceImpl implements LocalStorageService {

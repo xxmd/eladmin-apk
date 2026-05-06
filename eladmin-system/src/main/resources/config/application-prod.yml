@@ -57,7 +57,7 @@ spring:
 
 # 登录相关配置
 login:
-  enable-captcha: true
+  enable-captcha: false
   #  是否限制单用户登录
   single-login: false
   # Redis用户登录缓存配置
