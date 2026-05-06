@@ -54,7 +54,6 @@ echo "🚀 Step 5: docker run"
 echo "=============================="
 
 docker run -d \
-  --name $APP_NAME \
   -p $PORT:8000 \
   -v /home/eladmin/:/home/eladmin/ \
   -v /etc/localtime:/etc/localtime:ro \
