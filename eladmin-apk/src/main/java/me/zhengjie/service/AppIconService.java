@@ -55,7 +55,7 @@ public class AppIconService {
         LocalStorage iconZipFile = localStorageService.create(zipDir);
         item.setZipResFile(iconZipFile);
         iconZipReader.release();
-        FileUtils.deleteDirectory(zipDir);
+        FileUtils.delete(zipDir);
         return repository.save(item);
     }
 
