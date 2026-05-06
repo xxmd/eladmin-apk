@@ -57,6 +57,8 @@ docker run -d \
   --name $APP_NAME \
   -p $PORT:8000 \
   -v /home/eladmin/:/home/eladmin/ \
+  -v /etc/localtime:/etc/localtime:ro \
+  -v /etc/timezone:/etc/timezone:ro \
   $APP_NAME
 
 echo "=============================="
