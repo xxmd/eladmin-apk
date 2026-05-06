@@ -4,7 +4,7 @@ spring:
     druid:
       db-type: com.alibaba.druid.pool.DruidDataSource
       driverClassName: com.mysql.cj.jdbc.Driver
-      url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:eladmin_apk}?serverTimezone=Asia/Shanghai&characterEncoding=utf8&useSSL=false&allowPublicKeyRetrieval=true
+      url: jdbc:mysql://${DB_HOST:apk8848.qzz.io}:${DB_PORT:3306}/${DB_NAME:eladmin_apk}?serverTimezone=Asia/Shanghai&characterEncoding=utf8&useSSL=false&allowPublicKeyRetrieval=true
       username: ${DB_USER:root}
       password: ${DB_PWD:C6qaCBNNlcfMWMS3}
       # 初始连接数，建议设置为与最小空闲连接数相同
