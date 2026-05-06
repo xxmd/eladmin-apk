@@ -8,6 +8,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.zip.ZipInputStream;
 
 @Slf4j
@@ -26,10 +27,11 @@ public class IconZipReader {
             "play_store_512.png"
     };
 
-    private File unZipDir;
-    private File androidDir;
+    private final File unZipDir;
+    private final File androidDir;
+    private File androidZipDir;
 
-    public IconZipReader(MultipartFile file) {
+    public IconZipReader(MultipartFile file) throws IOException {
         if (file == null || file.isEmpty()) {
             throw new IllegalArgumentException("上传文件为空");
         }
@@ -37,10 +39,7 @@ public class IconZipReader {
         if (StringUtils.isEmpty(originalFilename) || !originalFilename.endsWith(".zip")) {
             throw new IllegalArgumentException("文件类型需要为zip压缩文件");
         }
-        this.unZipDir = new File("icon_unzip");
-        if (!unZipDir.exists()) {
-            unZipDir.mkdirs();
-        }
+        this.unZipDir = Files.createTempDirectory("icon_unzip").toFile();
         try {
             ZipUtil.unzip(new ZipInputStream(file.getInputStream()), unZipDir);
         } catch (Exception e) {
@@ -73,6 +72,13 @@ public class IconZipReader {
         return androidDir;
     }
 
+    public File getAndroidZipDir() {
+        if (androidZipDir == null) {
+            androidZipDir = ZipUtil.zip(androidDir);
+        }
+        return androidZipDir;
+    }
+
     public File getPlayStorePng() {
         return new File(androidDir, "play_store_512.png");
     }
@@ -80,6 +86,9 @@ public class IconZipReader {
     public void release() throws IOException {
         if (unZipDir.exists() && unZipDir.isDirectory()) {
             FileUtils.deleteDirectory(unZipDir);
+        }
+        if (androidZipDir != null && androidZipDir.exists() && androidZipDir.isFile()) {
+            FileUtils.delete(androidZipDir);
         }
     }
 }

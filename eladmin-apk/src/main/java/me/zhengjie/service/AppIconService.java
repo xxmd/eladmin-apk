@@ -28,6 +28,7 @@ import org.apache.commons.io.FileUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.validation.constraints.NotNull;
 import java.io.File;
@@ -47,16 +48,19 @@ public class AppIconService {
 
     @Transactional(rollbackFor = Exception.class)
     public AppIcon create(AppIcon item) throws IOException {
-        IconZipReader iconZipReader = new IconZipReader(item.getZipResFile().getRaw());
-        LocalStorage iconFile = localStorageService.create(iconZipReader.getPlayStorePng());
-        item.setMainIconFile(iconFile);
-        File androidDir = iconZipReader.getAndroidDir();
-        File zipDir = ZipUtil.zip(androidDir);
-        LocalStorage iconZipFile = localStorageService.create(zipDir);
-        item.setZipResFile(iconZipFile);
-        iconZipReader.release();
-        FileUtils.delete(zipDir);
-        return repository.save(item);
+        MultipartFile multipartFile = item.getZipResFile().getRaw();
+        if (multipartFile == null && item.getId() != null && item.getZipResFile().getId() != null && item.getMainIconFile().getId() != null) {
+            return item;
+        } else {
+            IconZipReader iconZipReader = new IconZipReader(multipartFile);
+            LocalStorage iconFile = localStorageService.create(iconZipReader.getPlayStorePng());
+            item.setMainIconFile(iconFile);
+            File androidZipDir = iconZipReader.getAndroidZipDir();
+            LocalStorage iconZipFile = localStorageService.create(androidZipDir);
+            item.setZipResFile(iconZipFile);
+            iconZipReader.release();
+            return repository.save(item);
+        }
     }
 
     @Transactional
